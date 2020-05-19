@@ -36,6 +36,3 @@ package-json.lock
 
 ########### Linux ###########
 *.*~
-
-########### project ###########
-dist/*
