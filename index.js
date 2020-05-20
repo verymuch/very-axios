@@ -1,39 +1,13 @@
 import axios from 'axios';
+import validator from './validator';
+import { ERROR_MESSAGE_MAPS } from './const';
 
-const ERROR_MESSAGE_MAPS = {
-  'zh-cn': {
-    DEFAULT: '接口请求失败',
-    OFFLINE: '网络连接断开',
-    400: '请求错误',
-    401: '未授权，请确认是否登录',
-    403: '无权限，禁止访问',
-    404: '接口或资源不存在',
-    405: '请求方式不允许',
-    413: '资源过大',
-    414: 'URI过长',
-    500: '服务器内部错误',
-    502: '网关错误',
-    504: '网关超时',
-  },
-  en: {
-    DEFAULT: 'Request Failed',
-    OFFLINE: 'Network is Offline',
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    405: 'Method Not Allowed',
-    413: 'Payload Too Large',
-    414: 'URI Too Long',
-    500: 'Internal Server Error',
-    502: 'Bad Gateway',
-    504: 'Gateway Timeout',
-  },
-};
 
 export default class VeryAxios {
-  constructor(
-    {
+  constructor(options = {}, axiosConfig) {
+    if (validator(options)) return;
+
+    const {
       // whether or not show tips when error ocurrs
       tip = true,
       // how to show tips
@@ -41,15 +15,15 @@ export default class VeryAxios {
       errorHandlers = {
         // 支持 400/401/403/404/405/413/414/500/502/504
       },
+      // error msg language: 'zh-cn'/'en'
       lang = 'zh-cn',
       loadingHandler = () => {},
       loadingCancelHanlder = () => {},
       getResponseStatus = (response) => response.errno,
       getResponseMessage = (response) => response.errmsg,
       getResponseData = (response) => response.data,
-    } = {},
-    axiosConfig,
-  ) {
+    } = options;
+
     // default axios config
     this.defaultAxiosConfig = {
       timeout: 20000,
