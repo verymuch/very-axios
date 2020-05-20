@@ -3,7 +3,7 @@ import { Validator } from 'jsonschema';
 export default function configValidator(options) {
   const validator = new Validator();
   const schema = {
-    title: 'VeryAxios options schema validator',
+    title: 'very-axios options schema validator',
     type: 'object',
     properties: {
       tip: {
