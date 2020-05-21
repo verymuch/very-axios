@@ -1,11 +1,11 @@
 import axios from 'axios';
+import merge from 'lodash/merge';
 import validator from './validator';
 import { ERROR_MESSAGE_MAPS } from './const';
 import { isFunction } from './util';
 
-
 export default class VeryAxios {
-  constructor(options = {}, axiosConfig) {
+  constructor(options = {}, axiosConfig = {}) {
     if (validator(options)) return;
     const {
       // whether or not show tips when error ocurrs
@@ -13,26 +13,28 @@ export default class VeryAxios {
       // how to show tips
       tipFn,
       errorHandlers = {
-        // 支持 400/401/403/404/405/413/414/500/502/504
+        // support 400/401/403/404/405/413/414/500/502/504/any other cutom errorno
       },
       // error msg language: 'zh-cn'/'en'
       lang = 'zh-cn',
-      // some op before request send
+      // some operation before request send
       beforeHook,
-      // some op after response is recieved
+      // some operation after response is recieved
       afterHook,
       // function to get errno in response
       getResStatus,
       // function to get err message in response
-      getResErrMsg = (res) => res.errmsg,
+      getResErrMsg,
       // function to get data in response
-      getResData = (res) => res.data,
+      getResData,
     } = options;
 
     this.tip = tip && isFunction(tipFn);
     this.tipFn = tipFn;
     this.errorHandlers = errorHandlers;
     this.lang = lang;
+    // these follow options cannot valid by JSON schema
+    // if option is not a function, set as the default value
     this.beforeHook = isFunction(beforeHook) ? beforeHook : () => {};
     this.afterHook = isFunction(afterHook) ? afterHook : () => {};
     this.getResStatus = isFunction(getResStatus) ? getResStatus : (res) => res.errno;
@@ -47,7 +49,7 @@ export default class VeryAxios {
         'content-type': 'application/json',
       },
     };
-    this.config = { ...this.defaultAxiosConfig, ...axiosConfig };
+    this.config = merge(this.defaultAxiosConfig, axiosConfig);
 
     this.createAxios();
     this.interceptors();
@@ -60,10 +62,9 @@ export default class VeryAxios {
   interceptors() {
     // intercept response
     this.axios.interceptors.request.use((config) => {
-      const { veryAxiosConfig } = config;
-      const disableHooks = veryAxiosConfig && veryAxiosConfig.disableHooks;
+      const { veryConfig: { disableHooks } = {} } = config;
       const disableBefore = disableHooks === true || (disableHooks && disableHooks.before);
-      if (!disableBefore) this.beforeHook();
+      if (!disableBefore) this.beforeHook(config);
       return config;
     });
 
@@ -72,34 +73,38 @@ export default class VeryAxios {
       // success handler
       // Any status code that lie within the range of 2xx cause this function to trigger
       (res) => {
-        const { config: { veryAxiosConfig } } = res;
-        const disableHooks = veryAxiosConfig && veryAxiosConfig.disableHooks;
+        const { config: { veryConfig: { disableHooks } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        if (!disableAfter) this.afterHook();
+        let processedRes = res;
+        if (!disableAfter) {
+          // if no return, set as original res
+          processedRes = this.afterHook(res) || res;
+        }
 
         return new Promise((resolve, reject) => {
-          if (!res || !res.data) resolve();
-          const resData = res.data;
-          const status = this.getResStatus(resData);
-          const message = this.getResErrMsg(resData) || ERROR_MESSAGE_MAPS[this.lang].DEFAULT;
-          const data = this.getResData(resData);
+          if (!processedRes || !processedRes.data) resolve();
+          const resData = processedRes.data;
+          const status = +this.getResStatus(resData);
           // status not equal to '0' means error
-          if (String(status) !== '0') {
+          if (status !== 0) {
+            const errmsgMaps = ERROR_MESSAGE_MAPS[this.lang];
+            const message = this.getResErrMsg(resData) || errmsgMaps[status] || errmsgMaps.DEFAULT;
             if (this.tip) this.tipFn(message);
             const errorHandler = this.errorHandlers[status];
             if (isFunction(errorHandler)) errorHandler();
             reject(message);
           }
+
+          const data = this.getResData(resData);
           return resolve(data);
         });
       },
       // error handler
       // Any status codes that falls outside the range of 2xx cause this function to trigger
       (error) => {
-        const { config: { veryAxiosConfig } } = error;
-        const disableHooks = veryAxiosConfig && veryAxiosConfig.disableHooks;
+        const { config: { veryConfig: { disableHooks } = {} } } = error;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        if (!disableAfter) this.afterHook();
+        if (!disableAfter) this.afterHook(error, true);
 
         const errmsgMaps = ERROR_MESSAGE_MAPS[this.lang];
         let errmsg = errmsgMaps.DEFAULT;
@@ -132,9 +137,9 @@ export default class VeryAxios {
 
   /**
    *
-   * @param {String} type   [请求类型]
-   * @param {String} path   [请求地址]
-   * @param {Object} param  [附带参数]
+   * @param {String} type   [request type]
+   * @param {String} path   [request url path]
+   * @param {Object} param  [request params]
    */
   fetch(type, path, param = {}, config = {}) {
     return new Promise((resolve, reject) => {
@@ -146,58 +151,60 @@ export default class VeryAxios {
 
   /**
    *
-   * @param {String} path   [请求地址]
-   * @param {Object} param  [附带参数]
-   * @param {Object} options  [请求时的单独配置，可以用于禁用hooks]
+   * @param {String} path   [request url path]
+   * @param {Object} param  [request params]
+   * @param {Object} config  [axios and very-axios config]
    */
-  GET(path, param = {}, options = {}) {
-    return this.fetch('get', path, { params: param, veryAxiosConfig: options });
+  GET(path, param = {}, config = {}) {
+    return this.fetch('get', path, { params: param, ...config });
   }
 
   /**
    *
-   * @param {String} path   [请求地址]
-   * @param {Object} param  [附带参数]
-   * @param {Object} options  [请求时的单独配置，可以用于禁用hooks]
+   * @param {String} path   [request url path]
+   * @param {Object} param  [request params]
+   * @param {Object} config  [axios and very-axios config]
    */
-  POST(path, param = {}, options = {}) {
-    return this.fetch('post', path, param, { veryAxiosConfig: options });
+  POST(path, param = {}, config = {}) {
+    return this.fetch('post', path, param, config);
   }
 
   /**
    *
-   * @param {String} path   [请求地址]
-   * @param {Object} param  [附带参数]
-   * @param {Object} options  [请求时的单独配置，可以用于禁用hooks]
+   * @param {String} path   [request url path]
+   * @param {Object} param  [request params]
+   * @param {Object} config  [axios and very-axios config]
    */
-  PUT(path, param = {}, options = {}) {
-    return this.fetch('put', path, param, { veryAxiosConfig: options });
+  PUT(path, param = {}, config = {}) {
+    return this.fetch('put', path, param, config);
   }
 
   /**
    *
-   * @param {String} path   [请求地址]
-   * @param {Object} param  [附带参数]
-   * @param {Object} options  [请求时的单独配置，可以用于禁用hooks]
+   * @param {String} path   [request url path]
+   * @param {Object} param  [request params]
+   * @param {Object} config  [axios and very-axios config]
    */
-  DELETE(path, param = {}, options = {}) {
-    return this.fetch('delete', path, param, { veryAxiosConfig: options });
+  DELETE(path, param = {}, config = {}) {
+    return this.fetch('delete', path, param, config);
   }
 
   /**
    * 上传表单方法
    * @param {*} path
    * @param {*} formdata
+   * @param {Object} config  [axios and very-axios config]
    */
-  FORMDATA(path, formdata) {
+  FORMDATA(path, formdata, config = {}) {
+    const defaultFormDataConfig = {
+      method: 'post',
+      data: formdata,
+      headers: {
+        'content-type': 'multipart/form-data;charset=UTF-8',
+      },
+    };
     return new Promise((resolve, reject) => {
-      this.axios(path, {
-        method: 'post',
-        data: formdata,
-        headers: {
-          'content-type': 'multipart/form-data;charset=UTF-8',
-        },
-      }).then((response) => resolve(response))
+      this.axios(path, merge(defaultFormDataConfig, config)).then((response) => resolve(response))
         .catch((err) => reject(err));
     });
   }

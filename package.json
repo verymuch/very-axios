@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "custom_field": "nothing...",
   "description": "custom npm init",
-  "main": "lib/very-axios.min.js",
+  "main": "index.js",
   "scripts": {
     "build": "webpack --config build/webpack.config.js",
     "build-watch": "webpack --config build/webpack.config.js --watch"
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "jsonschema": "^1.2.6"
+    "jsonschema": "^1.2.6",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
