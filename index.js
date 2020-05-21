@@ -125,6 +125,7 @@ export default class VeryAxios {
         }
 
         if (this.tip) this.tipFn(errmsg);
+        return Promise.reject(errmsg);
       },
     );
   }
