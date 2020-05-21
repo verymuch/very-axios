@@ -5,7 +5,8 @@
   "description": "custom npm init",
   "main": "lib/very-axios.min.js",
   "scripts": {
-    "build": "webpack --config build/webpack.config.js"
+    "build": "webpack --config build/webpack.config.js",
+    "build-watch": "webpack --config build/webpack.config.js --watch"
   },
   "dependencies": {
     "axios": "^0.19.2",
