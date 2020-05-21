@@ -1,9 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const Koa = require('koa');
 
 const { log } = console;
 const app = new Koa();
 
-// 获取访问文件路径
 app.use(async (ctx) => {
   const reqPath = ctx.path;
   ctx.set('Access-Control-Allow-Origin', '*');
@@ -14,17 +14,16 @@ app.use(async (ctx) => {
       ctx.body = {
         errno: '0',
         errmsg: '',
-        data: '请求充公',
+        data: '请求成功',
       };
       break;
+    // set status by request path
     default:
       ctx.status = Number(reqPath.split('/')[1]) || 200;
       break;
   }
 });
 
-
-// 错误处理
 app.on('error', (err) => {
   log('server error', err);
 });

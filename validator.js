@@ -26,6 +26,7 @@ export default function configValidator(options) {
   const hasError = errors.length > 0;
   if (hasError) {
     errors.forEach((err) => {
+      /* eslint-disable no-console */
       console.error(`very-axios: ${err.property.split('instance.')[1]} ${err.message}`);
     });
   }

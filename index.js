@@ -7,7 +7,6 @@ import { isFunction } from './util';
 export default class VeryAxios {
   constructor(options = {}, axiosConfig) {
     if (validator(options)) return;
-
     const {
       // whether or not show tips when error ocurrs
       tip = true,
@@ -108,6 +107,7 @@ export default class VeryAxios {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           const { status } = error.response;
+          /* eslint-disable no-undef */
           if (window && !window.navigator.onLine) errmsg = errmsgMaps.OFFLINE;
           else errmsg = errmsgMaps[status] || error.message;
           // run relative error handler
