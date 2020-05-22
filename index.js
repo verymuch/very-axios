@@ -75,15 +75,11 @@ export default class VeryAxios {
       (res) => {
         const { config: { veryConfig: { disableHooks } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        let processedRes = res;
-        if (!disableAfter) {
-          // if no return, set as original res
-          processedRes = this.afterHook(res) || res;
-        }
+        if (!disableAfter) this.afterHook(res);
 
         return new Promise((resolve, reject) => {
-          if (!processedRes || !processedRes.data) resolve();
-          const resData = processedRes.data;
+          if (!res || !res.data) resolve();
+          const resData = res.data;
           const status = +this.getResStatus(resData);
           // status not equal to '0' means error
           if (status !== 0) {
