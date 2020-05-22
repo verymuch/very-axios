@@ -2,7 +2,7 @@ import axios from 'axios';
 import merge from 'lodash/merge';
 import validator from './validator';
 import { ERROR_MESSAGE_MAPS } from './const';
-import { isFunction } from './util';
+import { isFunction, inBrowser } from './util';
 
 export default class VeryAxios {
   constructor(options = {}, axiosConfig = {}) {
@@ -108,8 +108,7 @@ export default class VeryAxios {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           const { status } = error.response;
-          /* eslint-disable no-undef */
-          if (window && !window.navigator.onLine) errmsg = errmsgMaps.OFFLINE;
+          if (inBrowser && !window.navigator.onLine) errmsg = errmsgMaps.OFFLINE;
           else errmsg = errmsgMaps[status] || error.message;
           // run relative error handler
           const errorHandler = this.errorHandlers[status];
