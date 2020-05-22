@@ -188,10 +188,15 @@ export default class VeryAxios {
   /**
    * 上传表单方法
    * @param {*} path
-   * @param {*} formdata
+   * @param {*} params
    * @param {Object} config  [axios and very-axios config]
    */
-  FORMDATA(path, formdata, config = {}) {
+  FORMDATA(path, params, config = {}) {
+    const formdata = new FormData();
+    Object.keys(params).forEach((key) => {
+      formdata.append(key, params[key]);
+    });
+
     const defaultFormDataConfig = {
       method: 'post',
       data: formdata,
