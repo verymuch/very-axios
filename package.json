@@ -4,6 +4,17 @@
   "custom_field": "nothing...",
   "description": "custom npm init",
   "main": "index.js",
+  "author": {
+    "name": "gaofeng(verymuch)",
+    "email": "gaofeng781x@163.com"
+  },
+  "keywords": [
+    "axios"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verymuch/very-axios"
+  },
   "scripts": {
     "build": "webpack --config build/webpack.config.js",
     "build-watch": "webpack --config build/webpack.config.js --watch"
