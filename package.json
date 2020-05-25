@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "custom_field": "nothing...",
   "description": "custom npm init",
-  "main": "index.js",
+  "main": "lib/very-axios.min.js",
   "author": {
     "name": "gaofeng(verymuch)",
     "email": "gaofeng781x@163.com"
