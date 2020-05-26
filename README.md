@@ -20,6 +20,14 @@
 
 ## 基础用法
 
+### 安装
+
+```cmd
+npm install -S very-axios
+```
+
+### 使用
+
 可以通过以下方法 `new` 一个 VeryAxios 的实例，第一个参数 `veryAxiosConfig` 为 `very-axios` 的配置，第二个参数 `axiosConfig` 为 axios 所支持的配置。
 
 ```JS
