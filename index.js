@@ -27,6 +27,8 @@ export default class VeryAxios {
       getResErrMsg,
       // function to get data in response
       getResData,
+      // function to validate res status, true is success
+      validateStatus,
     } = options;
 
     this.tip = tip && isFunction(tipFn);
@@ -40,6 +42,9 @@ export default class VeryAxios {
     this.getResStatus = isFunction(getResStatus) ? getResStatus : (res) => res.errno;
     this.getResErrMsg = isFunction(getResErrMsg) ? getResErrMsg : (res) => res.errmsg;
     this.getResData = isFunction(getResData) ? getResData : (res) => res.data;
+
+    const defaultValidateStatus = (status) => status === 0 || (status >= 200 && status < 300);
+    this.validateStatus = isFunction(validateStatus) ? validateStatus : defaultValidateStatus;
 
     // default axios config
     this.defaultAxiosConfig = {
@@ -81,8 +86,7 @@ export default class VeryAxios {
           if (!res || !res.data) resolve();
           const resData = res.data;
           const status = +this.getResStatus(resData);
-          // status not equal to '0' means error
-          if (status !== 0) {
+          if (!this.validateStatus(status)) {
             const errmsgMaps = ERROR_MESSAGE_MAPS[this.lang];
             const message = this.getResErrMsg(resData) || errmsgMaps[status] || errmsgMaps.DEFAULT;
             if (this.tip) this.tipFn(message);
