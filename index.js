@@ -4,6 +4,7 @@ import validator from './validator';
 import { ERROR_MESSAGE_MAPS } from './const';
 import { isFunction, inBrowser } from './util';
 
+export const originalAxios = axios;
 export default class VeryAxios {
   constructor(options = {}, axiosConfig = {}) {
     if (validator(options)) return;

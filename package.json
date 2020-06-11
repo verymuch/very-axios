@@ -9,13 +9,15 @@
     "email": "gaofeng781x@163.com"
   },
   "keywords": [
-    "axios"
+    "axios", 
+    "very-axios"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/verymuch/very-axios"
   },
   "scripts": {
+    "start": "npm run build-watch",
     "build": "webpack --config build/webpack.config.js",
     "build-watch": "webpack --config build/webpack.config.js --watch"
   },
