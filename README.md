@@ -180,8 +180,13 @@ request.GET(path, params, { veryConfig: { disableHooks: { after: true } } })
 
 ## `validateStatus`自主校验接口状态
 
-与`axios`中默认的`validateStatus`配置略有不同，`very-axios`中的默认值为`(status) => status === 0 || (status >= 200 && status < 300)`，主要是兼容了错误码由正确响应返回的情况。这时，`status`通常可能为`0`，有可能是正确的状态码`2xx`，所以加了一个可以判断的逻辑。特殊情况修改该判断逻辑即可。该配置不影响`axios`中`validateStatus`的判断逻辑，如果两个地方都需要，需要分别指定。
+与 `axios` 中默认的 `validateStatus` 配置略有不同，`very-axios` 中的默认值为 `(status) => status === 0 || (status >= 200 && status < 300)`，主要是兼容了错误码由正确响应返回的情况。这时，`status` 通常可能为`0`，有可能是正确的状态码 `2xx`，所以加了一个可以判断的逻辑。特殊情况修改该判断逻辑即可。该配置不影响 `axios` 中 `validateStatus` 的判断逻辑，如果两个地方都需要，需要分别指定。
 
+## 获取原始 `axios` 对象
 
+如果你现有项目已经使用了 `axios`，需要兼容旧的逻辑，可以通过以下方式获取原始 `axios` 的引用。
 
+```
+import VeryAxios, { originalAxios as axios } from 'very-axios'
+```
 
