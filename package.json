@@ -21,6 +21,7 @@
     "build": "webpack --config build/webpack.config.js",
     "build-watch": "webpack --config build/webpack.config.js --watch"
   },
+  "typings": "./index.d.ts",
   "dependencies": {
     "axios": "^0.19.2",
     "jsonschema": "^1.2.6",
