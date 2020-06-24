@@ -1,6 +1,6 @@
 {
   "name": "very-axios",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "custom_field": "nothing...",
   "description": "custom npm init",
   "main": "lib/very-axios.min.js",
