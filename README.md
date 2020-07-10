@@ -117,6 +117,14 @@ const request = new VeryAxios({
 
 VeryAxios 内置了常见 HTTP 错误的中英文提示，如 `401` 对应 “未授权，请确认是否登录” / “Unauthorized”。可以通过配置中的 `lang` 指定提示的语言。
 
+有些时候，我们可能想要只针对某个接口禁用tip，这可以在调用接口时传入第三个参数，如下，可以禁用该接口发生错误时的错误提示。
+
+```JS
+// 禁用 tip
+request.GET(path, params, { veryConfig: { disableTip: true } })
+```
+
+
 ## 自定义错误处理函数
 
 使用 `axios` 进行接口请求发生错误时，一般会有两种，一种是 `validateStatus` 不通过时（默认是 `2xx` 通过） ，另一种是所有接口错误信息都由 `200` 状态返回，返回结果中带有固定字段表示，如 `errno/errmsg`。

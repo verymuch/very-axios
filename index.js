@@ -79,7 +79,7 @@ export default class VeryAxios {
       // success handler
       // Any status code that lie within the range of 2xx cause this function to trigger
       (res) => {
-        const { config: { veryConfig: { disableHooks } = {} } } = res;
+        const { config: { veryConfig: { disableHooks, disableTip } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
         if (!disableAfter) this.afterHook(res);
 
@@ -90,7 +90,7 @@ export default class VeryAxios {
           if (!this.validateStatus(status)) {
             const errmsgMaps = ERROR_MESSAGE_MAPS[this.lang];
             const message = this.getResErrMsg(resData) || errmsgMaps[status] || errmsgMaps.DEFAULT;
-            if (this.tip) this.tipFn(message);
+            if (this.tip && !disableTip) this.tipFn(message);
             const errorHandler = this.errorHandlers[status];
             if (isFunction(errorHandler)) errorHandler();
             reject(message);
@@ -103,7 +103,7 @@ export default class VeryAxios {
       // error handler
       // Any status codes that falls outside the range of 2xx cause this function to trigger
       (error) => {
-        const { config: { veryConfig: { disableHooks } = {} } } = error;
+        const { config: { veryConfig: { disableHooks, disableTip } = {} } } = error;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
         if (!disableAfter) this.afterHook(error, true);
 
@@ -129,7 +129,7 @@ export default class VeryAxios {
           errmsg = error.message;
         }
 
-        if (this.tip) this.tipFn(errmsg);
+        if (this.tip && !disableTip) this.tipFn(errmsg);
         return Promise.reject(errmsg);
       },
     );
