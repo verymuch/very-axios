@@ -19,7 +19,8 @@
   "scripts": {
     "start": "npm run build-watch",
     "build": "webpack --config build/webpack.config.js",
-    "build-watch": "webpack --config build/webpack.config.js --watch"
+    "build-watch": "webpack --config build/webpack.config.js --watch",
+    "patch": "npm run build && npm version patch && npm publish"
   },
   "typings": "./index.d.ts",
   "dependencies": {
