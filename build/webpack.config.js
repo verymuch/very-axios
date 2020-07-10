@@ -10,6 +10,14 @@ module.exports = {
     library: 'very-axios',
     libraryTarget: 'umd',
   },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+      },
+    ],
+  },
   node: {
     process: false,
   },
