@@ -68,9 +68,17 @@ export default class VeryAxios {
   interceptors() {
     // intercept response
     this.axios.interceptors.request.use((config) => {
-      const { veryConfig: { disableHooks } = {} } = config;
+      const { veryConfig: { disableHooks, disableTip } = {} } = config;
       const disableBefore = disableHooks === true || (disableHooks && disableHooks.before);
-      if (!disableBefore) this.beforeHook(config);
+      if (!disableBefore) {
+        try {
+          this.beforeHook(config);
+        } catch(e) {
+          const message = `beforeHook内部错误：${e.message}`
+          if (this.tip && !disableTip) this.tipFn(message);
+          // 和response不一样，无需返回一个promise
+        }
+      }
       return config;
     });
 
@@ -81,7 +89,16 @@ export default class VeryAxios {
       (res) => {
         const { config: { veryConfig: { disableHooks, disableTip } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        if (!disableAfter) this.afterHook(res);
+
+        if (!disableAfter) {
+          try{
+            this.afterHook(res);
+          } catch(e) {
+            const message = `afterHook内部错误：${e.message}`
+            if (this.tip && !disableTip) this.tipFn(message);
+            return Promise.reject(message);
+          }
+        }
 
         return new Promise((resolve, reject) => {
           if (!res || !res.data) resolve();
@@ -105,7 +122,16 @@ export default class VeryAxios {
       (error) => {
         const { config: { veryConfig: { disableHooks, disableTip } = {} } } = error;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        if (!disableAfter) this.afterHook(error, true);
+        
+        if (!disableAfter) {
+          try{
+            this.afterHook(error, true);
+          } catch(e) {
+            const message = `afterHook内部错误：${e.message}`
+            if (this.tip && !disableTip) this.tipFn(message);
+            return Promise.reject(message);
+          }
+        }
 
         const errmsgMaps = ERROR_MESSAGE_MAPS[this.lang];
         let errmsg = errmsgMaps.DEFAULT;
