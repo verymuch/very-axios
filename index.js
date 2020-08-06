@@ -5,6 +5,42 @@ import { ERROR_MESSAGE_MAPS } from './const';
 import { isFunction, inBrowser } from './util';
 
 export const originalAxios = axios;
+
+// 存储每个请求的标识 和 取消函数
+const pendingAjax = new Map();
+/**
+ * 添加请求
+ * @param {Object} config
+ */
+const addPendingAjax = (config) => {
+  const url = [
+    config.method,
+    config.url,
+  ].join('&');
+  config.cancelToken = config.cancelToken || new axios.CancelToken((cancel) => {
+    // 如果 pendingAjax 中不存在当前请求，则添加进去
+    if (!pendingAjax.has(url)) {
+      pendingAjax.set(url, cancel);
+    }
+  });
+};
+/**
+ * 移除请求
+ * @param {Object} config
+ */
+const removePendingAjax = (config) => {
+  const url = [
+    config.method,
+    config.url,
+  ].join('&');
+  // 如果在 pendingAjax 中存在当前请求标识，需要取消当前请求，并且移除
+  if (pendingAjax.has(url)) {
+    const cancel = pendingAjax.get(url);
+    cancel(url);
+    pendingAjax.delete(url);
+  }
+};
+
 export default class VeryAxios {
   constructor(options = {}, axiosConfig = {}) {
     if (validator(options)) return;
@@ -68,9 +104,12 @@ export default class VeryAxios {
   interceptors() {
     // intercept response
     this.axios.interceptors.request.use((config) => {
+      removePendingAjax(config); // 在请求开始前，对之前的请求做检查取消操作
+      addPendingAjax(config); // 将当前请求添加到 pending 中
       const { veryConfig: { disableHooks } = {} } = config;
       const disableBefore = disableHooks === true || (disableHooks && disableHooks.before);
       if (!disableBefore) this.beforeHook(config);
+
       return config;
     });
 
@@ -79,6 +118,7 @@ export default class VeryAxios {
       // success handler
       // Any status code that lie within the range of 2xx cause this function to trigger
       (res) => {
+        removePendingAjax(res); // 在请求结束后，移除本次请求
         const { config: { veryConfig: { disableHooks, disableTip } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
         if (!disableAfter) this.afterHook(res);
@@ -103,7 +143,8 @@ export default class VeryAxios {
       // error handler
       // Any status codes that falls outside the range of 2xx cause this function to trigger
       (error) => {
-        const { config: { veryConfig: { disableHooks, disableTip } = {} } } = error;
+        const config = error.config || {};
+        const { veryConfig: { disableHooks, disableTip } = {} } = config;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
         if (!disableAfter) this.afterHook(error, true);
 
