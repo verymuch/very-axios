@@ -18,6 +18,8 @@ A convinient and uniform way to code with axios.
   * specify `getResErrMsg(resData)` to get error message
   * specify `getResData(resData)` to get true response data
 
+* repeated requests are automatically cancelled
+
 ## 基础用法
 
 可以通过以下方法`new`一个VeryAxios的实例，第一个参数`veryAxiosConfig`为`very-axios`的配置，第二个参数`axiosConfig`为axios所支持的配置。
