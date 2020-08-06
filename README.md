@@ -18,6 +18,7 @@
   - 指定获取错误消息函数 `getResErrMsg(resData)`，获取 response 中的错误消息
   - 指定获取返回最终数据函数 `getResData(resData)`，获取 response 中的返回数据
 - `validateStatus`自主校验接口状态
+- 重复请求自动取消
 
 ## 基础用法
 
