@@ -1,45 +1,10 @@
 import axios from 'axios';
 import merge from 'lodash/merge';
 import validator from './validator';
-import { ERROR_MESSAGE_MAPS } from './const';
+import { ERROR_MESSAGE_MAPS, REQUEST_TYPE } from './const';
 import { isFunction, inBrowser } from './util';
 
 export const originalAxios = axios;
-
-// 存储每个请求的标识 和 取消函数
-const pendingAjax = new Map();
-/**
- * 添加请求
- * @param {Object} config
- */
-const addPendingAjax = (config) => {
-  const url = [
-    config.method,
-    config.url,
-  ].join('&');
-  config.cancelToken = config.cancelToken || new axios.CancelToken((cancel) => {
-    // 如果 pendingAjax 中不存在当前请求，则添加进去
-    if (!pendingAjax.has(url)) {
-      pendingAjax.set(url, cancel);
-    }
-  });
-};
-/**
- * 移除请求
- * @param {Object} config
- */
-const removePendingAjax = (config) => {
-  const url = [
-    config.method,
-    config.url,
-  ].join('&');
-  // 如果在 pendingAjax 中存在当前请求标识，需要取消当前请求，并且移除
-  if (pendingAjax.has(url)) {
-    const cancel = pendingAjax.get(url);
-    cancel(url);
-    pendingAjax.delete(url);
-  }
-};
 
 export default class VeryAxios {
   constructor(options = {}, axiosConfig = {}) {
@@ -66,12 +31,19 @@ export default class VeryAxios {
       getResData,
       // function to validate res status, true is success
       validateStatus,
+      
+      // whether to cancel a repeat request
+      cancelRepeatRequest = false,
     } = options;
+    // stores the identity and cancellation function for each request
+    this.pendingAjax = new Map();
 
     this.tip = tip && isFunction(tipFn);
     this.tipFn = tipFn;
     this.errorHandlers = errorHandlers;
     this.lang = lang;
+    this.cancelRepeatRequest = cancelRepeatRequest;
+
     // these follow options cannot valid by JSON schema
     // if option is not a function, set as the default value
     this.beforeHook = isFunction(beforeHook) ? beforeHook : () => {};
@@ -104,6 +76,10 @@ export default class VeryAxios {
   interceptors() {
     // intercept response
     this.axios.interceptors.request.use((config) => {
+      // check the previous request for cancellation before the request starts
+      this.removePendingAjax(config);
+      // add the current request to pendingAjax
+      this.addPendingAjax(config);
       const { veryConfig: { disableHooks, disableTip } = {} } = config;
       const disableBefore = disableHooks === true || (disableHooks && disableHooks.before);
       if (!disableBefore) {
@@ -124,7 +100,7 @@ export default class VeryAxios {
       // success handler
       // Any status code that lie within the range of 2xx cause this function to trigger
       (res) => {
-        removePendingAjax(res); // 在请求结束后，移除本次请求
+        this.removePendingAjax(res.config);
         const { config: { veryConfig: { disableHooks, disableTip } = {} } } = res;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
 
@@ -159,6 +135,9 @@ export default class VeryAxios {
       // Any status codes that falls outside the range of 2xx cause this function to trigger
       (error) => {
         const config = error.config || {};
+
+        // when erroe is requested, remove the request
+        this.removePendingAjax(config);
         const { veryConfig: { disableHooks, disableTip } = {} } = config;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
         
@@ -193,11 +172,56 @@ export default class VeryAxios {
           // Something happened in setting up the request that triggered an Error
           errmsg = error.message;
         }
-
-        if (this.tip && !disableTip) this.tipFn(errmsg);
-        return Promise.reject(errmsg);
+        const errorType = (JSON.parse(error.message) || {}).type;
+        if (this.tip && !disableTip && errorType !== REQUEST_TYPE.REPEAT_REQUEST) this.tipFn(errmsg);
+        if (errorType !== REQUEST_TYPE.REPEAT_REQUEST) {
+          // if it is not the type of repeat request
+          return Promise.reject(errmsg);
+        }
       },
     );
+  }
+
+  /**
+   * add request to pendingAjax
+   * @param {Object} config
+   */
+  addPendingAjax(config) {
+    // if need cancel repeat request
+    if (this.cancelRepeatRequest) {
+      const veryConfig = config.veryConfig || {};
+      const repeatRequestKey = JSON.stringify({
+        repeatRequestKey: veryConfig.repeatRequestKey || `${config.method}${config.url}`, 
+        type: REQUEST_TYPE.REPEAT_REQUEST,
+      });
+      config.cancelToken = config.cancelToken || new axios.CancelToken((cancel) => {
+        // if the current request does not exist in pendingAjax, add it
+        if (repeatRequestKey && !this.pendingAjax.has(repeatRequestKey)) {
+          this.pendingAjax.set(repeatRequestKey, cancel);
+        }
+      });
+    }
+  }
+
+  /**
+   * remove the request in pendingAjax
+   * @param {Object} config
+   */
+  removePendingAjax(config) {
+    // if need cancel repeat request
+    if (this.cancelRepeatRequest) {
+      const veryConfig = config.veryConfig || {};
+      const repeatRequestKey = JSON.stringify({
+        repeatRequestKey: veryConfig.repeatRequestKey || `${config.method}${config.url}`, 
+        type: REQUEST_TYPE.REPEAT_REQUEST,
+      });
+      // if the current request exists in pendingAjax, cancel the current request and remove it
+      if (repeatRequestKey && this.pendingAjax.has(repeatRequestKey)) {
+        const cancel = this.pendingAjax.get(repeatRequestKey);
+        cancel(repeatRequestKey);
+        this.pendingAjax.delete(repeatRequestKey);
+      }
+    }
   }
 
   /**

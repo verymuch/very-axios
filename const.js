@@ -29,3 +29,8 @@ export const ERROR_MESSAGE_MAPS = {
     504: 'Gateway Timeout',
   },
 };
+
+// 请求的类型
+export const REQUEST_TYPE = {
+  REPEAT_REQUEST: 'repeatRequest', // repeated requests
+}
