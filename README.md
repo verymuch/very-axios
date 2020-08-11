@@ -19,8 +19,9 @@
   - 指定获取返回最终数据函数 `getResData(resData)`，获取 response 中的返回数据
 - `validateStatus`自主校验接口状态
 - 配置可取消重复请求
-  * 在 `new VeryAxios` 实例时，配置`cancelRepeatRequest: true`可开启取消重复的请求
-  * 在请求时的可自定义配置重复请求的标识`repeatRequestKey`
+  * 在 `new VeryAxios` 实例时，配置`cancelDuplicated: true`可开启取消重复的请求
+  * 在 `new VeryAxios` 实例时，`duplicatedKeyFn`函数可配置统一的重复请求的标识
+  * 在请求时的可自定义配置单个请求的重复标识`duplicatedKey`
 
 ## 基础用法
 
@@ -89,7 +90,10 @@ export default {
   getResData: (resData) => resData.data, // default
   
   // 是否开启取消重复请求
-  cancelRepeatRequest: false, // default
+  cancelDuplicated: false, // default
+    
+  // 如果开启了取消重复请求，如何生成重复标识
+  duplicatedKeyFn: (config) => {}
 }
 ```
 
@@ -198,22 +202,35 @@ request.GET(path, params, { veryConfig: { disableHooks: { after: true } } })
 
 ## 配置可取消重复请求自动
 
-* 在 `new VeryAxios` 实例时，配置`canelRepeatRequest: true`可开启取消重复的请求
+如果开启了取消重复请求，但是没有配置`duplicatedKeyFn` 和 `duplicatedKey`，那么默认的请求标识：`${config.method}${config.url}`。如果同时配置了`duplicatedKeyFn` 和 `duplicatedKey`，那么`duplicatedKey`的优先级高于`duplicatedKeyFn`
+
+* 在 `new VeryAxios` 实例时，配置`cancelDuplicated: true`可开启取消重复的请求
 
   ```javascript
   const veryAxiosConfig = {
-    cancelRepeatRequest: true,
+    cancelDuplicated: true,
   }
   const request = new VeryAxios(veryAxiosConfig)
   ```
 
-* 在请求时的可自定义配置重复请求的标识`repeatRequestKey`
+* 在 `new VeryAxios` 实例时，`duplicatedKeyFn`函数可配置统一的重复请求的标识
 
   ```javascript
-  request.GET(path, params, { veryConfig: { repeatRequestKey: 'repeatRequestKey' } })
+  const veryAxiosConfig = {
+    cancelDuplicated: true,
+    duplicatedKeyFn: (config) => {
+      const { method, url, responseType } = config
+      return `${method}${url}${responseType}`
+    }
+  }
+  const request = new VeryAxios(veryAxiosConfig)
   ```
 
-  没有配置`repeatRequestKey`的情况下，默认标识是该请求的`method`加上该请求的`url`的拼接字符串(不包含参数)
+* 在请求时的可自定义配置单个请求的重复标识`duplicatedKey`
+
+  ```javascript
+  request.GET(path, params, { veryConfig: { duplicatedKey: 'duplicatedKey' } })
+  ```
 
 ## 获取原始 `axios` 对象
 
