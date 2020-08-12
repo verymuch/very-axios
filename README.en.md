@@ -18,6 +18,11 @@ A convinient and uniform way to code with axios.
   * specify `getResErrMsg(resData)` to get error message
   * specify `getResData(resData)` to get true response data
 
+* configure to cancel duplicate requests
+  * in the `new VeryAxios` instance, configure `cancelDuplicated: true` to enable cancellation of duplicate requests
+  * in the `new VeryAxios` instance, configure `duplicatedKeyFn` function to generate a duplicate key
+  * customize the duplicate key `duplicatedKey` of a single request when requesting
+
 ## 基础用法
 
 可以通过以下方法`new`一个VeryAxios的实例，第一个参数`veryAxiosConfig`为`very-axios`的配置，第二个参数`axiosConfig`为axios所支持的配置。
@@ -29,7 +34,7 @@ const request = new VeryAxios(veryAxiosConfig, axiosConfig)
 
 `veryAxiosConfig` 支持以下配置：
 
-```
+```javascript
 {
   // whether or not show tips when error ocurrs
   tip: true, // default
@@ -50,5 +55,9 @@ const request = new VeryAxios(veryAxiosConfig, axiosConfig)
   getResErrMsg: (res) => res.errmsg, // default
   // function to get data in response
   getResData: (res) => res.data, // default
+  // whether to enable cancellation of duplicate requests
+  cancelDuplicated: false, // default
+  // function of how to generate a duplicate key
+  duplicatedKeyFn: (config) => `${config.method}${config.url}` // default
 }
 ```
