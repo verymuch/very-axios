@@ -56,7 +56,6 @@ export default class VeryAxios {
     this.getResData = isFunction(getResData) ? getResData : (res) => res.data;
     this.duplicatedKeyFn = isFunction(duplicatedKeyFn) ? duplicatedKeyFn : (config) => `${config.method}${config.url}`;
 
-
     const defaultValidateStatus = (status) => status === 0 || (status >= 200 && status < 300);
     this.validateStatus = isFunction(validateStatus) ? validateStatus : defaultValidateStatus;
 
