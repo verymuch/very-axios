@@ -93,7 +93,7 @@ export default {
   cancelDuplicated: false, // default
     
   // 如果开启了取消重复请求，如何生成重复标识
-  duplicatedKeyFn: (config) => {}
+  duplicatedKeyFn: (config) => `${config.method}${config.url}` // default
 }
 ```
 
