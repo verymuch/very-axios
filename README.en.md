@@ -18,7 +18,7 @@ A convinient and uniform way to code with axios.
   * specify `getResErrMsg(resData)` to get error message
   * specify `getResData(resData)` to get true response data
 
-* repeated requests are automatically cancelled
+* configure to cancel duplicate requests
 
 ## 基础用法
 
