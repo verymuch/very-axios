@@ -32,7 +32,7 @@ export default class VeryAxios {
       // function to validate res status, true is success
       validateStatus,
       
-      // whether to cancel a repeat request
+      // whether to cancel a duplicated request
       cancelDuplicated = false,
 
       // how to generate the duplicated key
@@ -46,7 +46,6 @@ export default class VeryAxios {
     this.errorHandlers = errorHandlers;
     this.lang = lang;
     this.cancelDuplicated = cancelDuplicated;
-    this.duplicatedKeyFn = duplicatedKeyFn;
 
     // these follow options cannot valid by JSON schema
     // if option is not a function, set as the default value
@@ -55,6 +54,8 @@ export default class VeryAxios {
     this.getResStatus = isFunction(getResStatus) ? getResStatus : (res) => res.errno;
     this.getResErrMsg = isFunction(getResErrMsg) ? getResErrMsg : (res) => res.errmsg;
     this.getResData = isFunction(getResData) ? getResData : (res) => res.data;
+    this.duplicatedKeyFn = isFunction(duplicatedKeyFn) ? duplicatedKeyFn : (config) => `${config.method}${config.url}`;
+
 
     const defaultValidateStatus = (status) => status === 0 || (status >= 200 && status < 300);
     this.validateStatus = isFunction(validateStatus) ? validateStatus : defaultValidateStatus;
@@ -175,12 +176,17 @@ export default class VeryAxios {
           // Something happened in setting up the request that triggered an Error
           errmsg = error.message;
         }
-        const errorType = (JSON.parse(error.message) || {}).type;
-        if (this.tip && !disableTip && errorType !== REQUEST_TYPE.REPEAT_REQUEST) this.tipFn(errmsg);
-        if (errorType !== REQUEST_TYPE.REPEAT_REQUEST) {
-          // if it is not the type of repeat request
-          return Promise.reject(errmsg);
+        // whether is the type of duplicated request
+        let isDuplicatedType;
+        try {
+          const errorType = (JSON.parse(error.message) || {}).type
+          isDuplicatedType = errorType === REQUEST_TYPE.DUPLICATED_REQUEST;
+        } catch (error) {
+          isDuplicatedType = false
         }
+        if (isDuplicatedType) return;
+        if (this.tip && !disableTip) this.tipFn(errmsg);
+        return Promise.reject(errmsg);
       },
     );
   }
@@ -190,12 +196,12 @@ export default class VeryAxios {
    * @param {Object} config
    */
   addPendingAjax(config) {
-    // if need cancel repeat request
+    // if need cancel duplicated request
     if (!this.cancelDuplicated) return 
     const veryConfig = config.veryConfig || {};
     const duplicatedKey = JSON.stringify({
-      duplicatedKey:  veryConfig.duplicatedKey || (this.duplicatedKeyFn && this.duplicatedKeyFn(config)) || `${config.method}${config.url}`, 
-      type: REQUEST_TYPE.REPEAT_REQUEST,
+      duplicatedKey:  veryConfig.duplicatedKey || this.duplicatedKeyFn(config), 
+      type: REQUEST_TYPE.DUPLICATED_REQUEST,
     });
     config.cancelToken = config.cancelToken || new axios.CancelToken((cancel) => {
       // if the current request does not exist in pendingAjax, add it
@@ -210,12 +216,12 @@ export default class VeryAxios {
    * @param {Object} config
    */
   removePendingAjax(config) {
-    // if need cancel repeat request
+    // if need cancel duplicated request
     if (!this.cancelDuplicated) return
     const veryConfig = config.veryConfig || {};
     const duplicatedKey = JSON.stringify({
-      duplicatedKey:  veryConfig.duplicatedKey || (this.duplicatedKeyFn && this.duplicatedKeyFn(config)) || `${config.method}${config.url}`, 
-      type: REQUEST_TYPE.REPEAT_REQUEST,
+      duplicatedKey:  veryConfig.duplicatedKey || this.duplicatedKeyFn(config), 
+      type: REQUEST_TYPE.DUPLICATED_REQUEST,
     });
     // if the current request exists in pendingAjax, cancel the current request and remove it
     if (duplicatedKey && this.pendingAjax.has(duplicatedKey)) {

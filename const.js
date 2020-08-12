@@ -32,5 +32,5 @@ export const ERROR_MESSAGE_MAPS = {
 
 // 请求的类型
 export const REQUEST_TYPE = {
-  REPEAT_REQUEST: 'repeatRequest', // repeated requests
+  DUPLICATED_REQUEST: 'duplicatedRequest', // duplicated request
 }
