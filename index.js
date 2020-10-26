@@ -31,7 +31,7 @@ export default class VeryAxios {
       getResData,
       // function to validate res status, true is success
       validateStatus,
-      
+
       // whether to cancel a duplicated request
       cancelDuplicated = false,
 
@@ -89,8 +89,8 @@ export default class VeryAxios {
       if (!disableBefore) {
         try {
           this.beforeHook(config);
-        } catch(e) {
-          const message = `beforeHook内部错误：${e.message}`
+        } catch (e) {
+          const message = `beforeHook内部错误：${e.message}`;
           if (this.tip && !disableTip) this.tipFn(message);
           // 和response不一样，无需返回一个promise
         }
@@ -108,10 +108,10 @@ export default class VeryAxios {
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
 
         if (!disableAfter) {
-          try{
+          try {
             this.afterHook(res);
-          } catch(e) {
-            const message = `afterHook内部错误：${e.message}`
+          } catch (e) {
+            const message = `afterHook内部错误：${e.message}`;
             if (this.tip && !disableTip) this.tipFn(message);
             return Promise.reject(message);
           }
@@ -143,12 +143,12 @@ export default class VeryAxios {
         this.removePendingAjax(config);
         const { veryConfig: { disableHooks, disableTip } = {} } = config;
         const disableAfter = disableHooks === true || (disableHooks && disableHooks.after);
-        
+
         if (!disableAfter) {
-          try{
+          try {
             this.afterHook(error, true);
-          } catch(e) {
-            const message = `afterHook内部错误：${e.message}`
+          } catch (e) {
+            const message = `afterHook内部错误：${e.message}`;
             if (this.tip && !disableTip) this.tipFn(message);
             return Promise.reject(message);
           }
@@ -160,8 +160,10 @@ export default class VeryAxios {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           const { status } = error.response;
-          if (inBrowser && !window.navigator.onLine) errmsg = errmsgMaps.OFFLINE;
-          else errmsg = errmsgMaps[status] || error.message;
+          // TODO:临时去除window
+          // if (inBrowser && !window.navigator.onLine) errmsg = errmsgMaps.OFFLINE;
+          // else
+          errmsg = errmsgMaps[status] || error.message;
           // run relative error handler
           const errorHandler = this.errorHandlers[status];
           if (isFunction(errorHandler)) errorHandler();
@@ -178,10 +180,10 @@ export default class VeryAxios {
         // whether is the type of duplicated request
         let isDuplicatedType;
         try {
-          const errorType = (JSON.parse(error.message) || {}).type
+          const errorType = (JSON.parse(error.message) || {}).type;
           isDuplicatedType = errorType === REQUEST_TYPE.DUPLICATED_REQUEST;
         } catch (error) {
-          isDuplicatedType = false
+          isDuplicatedType = false;
         }
         if (isDuplicatedType) return;
         if (this.tip && !disableTip) this.tipFn(errmsg);
@@ -196,10 +198,10 @@ export default class VeryAxios {
    */
   addPendingAjax(config) {
     // if need cancel duplicated request
-    if (!this.cancelDuplicated) return 
+    if (!this.cancelDuplicated) return;
     const veryConfig = config.veryConfig || {};
     const duplicatedKey = JSON.stringify({
-      duplicatedKey:  veryConfig.duplicatedKey || this.duplicatedKeyFn(config), 
+      duplicatedKey: veryConfig.duplicatedKey || this.duplicatedKeyFn(config),
       type: REQUEST_TYPE.DUPLICATED_REQUEST,
     });
     config.cancelToken = config.cancelToken || new axios.CancelToken((cancel) => {
@@ -216,10 +218,10 @@ export default class VeryAxios {
    */
   removePendingAjax(config) {
     // if need cancel duplicated request
-    if (!this.cancelDuplicated) return
+    if (!this.cancelDuplicated) return;
     const veryConfig = config.veryConfig || {};
     const duplicatedKey = JSON.stringify({
-      duplicatedKey:  veryConfig.duplicatedKey || this.duplicatedKeyFn(config), 
+      duplicatedKey: veryConfig.duplicatedKey || this.duplicatedKeyFn(config),
       type: REQUEST_TYPE.DUPLICATED_REQUEST,
     });
     // if the current request exists in pendingAjax, cancel the current request and remove it
