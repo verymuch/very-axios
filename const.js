@@ -3,6 +3,7 @@ export const ERROR_MESSAGE_MAPS = {
   'zh-cn': {
     DEFAULT: '接口请求失败',
     OFFLINE: '网络连接断开',
+    DUPLICATED_CANCELED: '重复请求已取消',
     400: '请求错误，请检查参数',
     401: '未授权，请确认是否登录',
     403: '无权限，禁止访问',
@@ -17,6 +18,7 @@ export const ERROR_MESSAGE_MAPS = {
   en: {
     DEFAULT: 'Request Failed',
     OFFLINE: 'Network is Offline',
+    DUPLICATED_CANCELED: 'Duplicated request is canceled',
     400: 'Bad Request',
     401: 'Unauthorized',
     403: 'Forbidden',
@@ -33,4 +35,4 @@ export const ERROR_MESSAGE_MAPS = {
 // 请求的类型
 export const REQUEST_TYPE = {
   DUPLICATED_REQUEST: 'duplicatedRequest', // duplicated request
-}
+};

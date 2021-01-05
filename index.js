@@ -182,10 +182,10 @@ export default class VeryAxios {
         try {
           const errorType = (JSON.parse(error.message) || {}).type;
           isDuplicatedType = errorType === REQUEST_TYPE.DUPLICATED_REQUEST;
-        } catch (error) {
+        } catch (e) {
           isDuplicatedType = false;
         }
-        if (isDuplicatedType) return;
+        if (isDuplicatedType) return Promise.reject(errmsgMaps.DUPLICATED_CANCELED);
         if (this.tip && !disableTip) this.tipFn(errmsg);
         return Promise.reject(errmsg);
       },
